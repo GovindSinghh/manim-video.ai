@@ -14,7 +14,7 @@ const client = ModelClient(
     new AzureKeyCredential(token),
 );
 
-export async function generateScript(userPrompt:string) {
+export async function generateScript(userPrompt:string):Promise<string> {
 
     try{
             const response = await client.path("/chat/completions").post({
