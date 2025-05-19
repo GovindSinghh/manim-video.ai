@@ -99,7 +99,9 @@ router.get("/generateScript",authMiddleware,async (req:AuthRequest,res:Response)
     if (!userId) {
         return res.status(401).json({ message: "User not authenticated" });
     }
-    const script = await generateScript(userPrompt);
+    const receivedResponse = await generateScript(userPrompt);
+    const script=receivedResponse.script;
+    const sceneName=receivedResponse.sceneName;
     // Create the script
     try{
         const createdScript=await prisma.script.create({
@@ -111,7 +113,7 @@ router.get("/generateScript",authMiddleware,async (req:AuthRequest,res:Response)
             }
         });
     
-        await publishScript(createdScript.id,createdScript.script);
+        await publishScript(createdScript.id,createdScript.script,sceneName);
     }
     catch(error){
         res.status(500).json({

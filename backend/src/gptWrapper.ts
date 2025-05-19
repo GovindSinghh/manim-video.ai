@@ -14,7 +14,7 @@ const client = ModelClient(
     new AzureKeyCredential(token),
 );
 
-export async function generateScript(userPrompt:string):Promise<string> {
+export async function generateScript(userPrompt:string):Promise<any> {
 
     try{
             const response = await client.path("/chat/completions").post({
@@ -31,7 +31,6 @@ export async function generateScript(userPrompt:string):Promise<string> {
             if (isUnexpected(response)) {
                 throw response.body.error;
             }
-
             return response.body.choices[0].message.content;
     }
     catch(error){

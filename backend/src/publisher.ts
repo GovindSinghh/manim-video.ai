@@ -1,8 +1,5 @@
-
-import prisma from './lib/prisma';
 var amqp = require('amqplib/callback_api');
-
-export async function publishScript(id:number,script:string):Promise<any> {
+export async function publishScript(id:number,script:string,sceneName:string):Promise<any> {
   try {
 
     amqp.connect('amqp://localhost', function(error0:any, connection:any) {
@@ -17,8 +14,9 @@ export async function publishScript(id:number,script:string):Promise<any> {
         
         // Create message object with script and scriptId from database
         const message = {
-          script: script,
-          scriptId: id.toString()
+          script,
+          scriptId: id.toString(),
+          sceneName
         };
 
         channel.assertQueue(queue, {
@@ -41,7 +39,5 @@ export async function publishScript(id:number,script:string):Promise<any> {
   } catch (error) {
     console.error('Error publishing script:', error);
     process.exit(1);
-  } finally {
-    await prisma.$disconnect();
   }
 }
