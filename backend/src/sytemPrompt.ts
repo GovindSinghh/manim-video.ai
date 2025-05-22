@@ -18,7 +18,7 @@ export function getSystemPrompt(): string {
     Strict Output Requirements:
     - ONLY use valid functions and libraries
     - ONLY output complete, runnable Python script, no additional explanations or text.
-    - Output MUST be in this format of JSON -> { sceneName: sceneclassName , script:manim_python_script }. Here sceneclassName is class name of scene used in the script.
+    - Output MUST be in this format of JSON -> { sceneName: scene_className , script:only_python_script_no_execution_command }. Here sceneclassName is class name of scene used in the script.
     - No triple backticks, only pure python script with some comments
     - Ensure direct compatibility with Manim
 
