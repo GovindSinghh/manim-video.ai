@@ -1,4 +1,5 @@
 import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Header from './components/Header';
 import PromptInput from './components/PromptInput';
 import ScriptDisplay from './components/ScriptDisplay';
@@ -6,7 +7,10 @@ import VideoPlayer from './components/VideoPlayer';
 import History from './components/History';
 import Footer from './components/Footer';
 import { GenerationProvider, useGeneration } from './contexts/GenerationContext';
+import Signup from './components/Signup';
 import './index.css';
+import ProtectedRoute from './components/ProtectedRoute';
+import Login from './components/Login';
 
 const MainContent: React.FC = () => {
   const { state } = useGeneration();
@@ -57,7 +61,7 @@ const MainContent: React.FC = () => {
   );
 };
 
-function App() {
+const Dashboard: React.FC = () => {
   return (
     <GenerationProvider>
       <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
@@ -66,6 +70,18 @@ function App() {
         <Footer />
       </div>
     </GenerationProvider>
+  );
+};
+
+function App() {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+      </Routes>
+    </Router>
   );
 }
 

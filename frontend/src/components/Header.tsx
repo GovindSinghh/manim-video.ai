@@ -8,7 +8,7 @@ const Header: React.FC = () => {
         <div className="flex items-center mb-4 md:mb-0">
           <Code2 className="mr-2 h-8 w-8" />
           <div>
-            <h1 className="text-2xl font-bold">Manim Animation Generator</h1>
+            <h1 className="text-2xl font-bold">MathVizAI</h1>
             <p className="text-purple-200 text-sm">Transform ideas into mathematical animations</p>
           </div>
         </div>
