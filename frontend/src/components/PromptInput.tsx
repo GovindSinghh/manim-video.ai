@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Send, Sparkles, X } from 'lucide-react';
 import { useGeneration, useGenerateScript } from '../contexts/GenerationContext';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 interface SuggestionProps {
   text: string;
@@ -20,6 +21,7 @@ const Suggestion: React.FC<SuggestionProps> = ({ text, onClick }) => (
 );
 
 const PromptInput: React.FC = () => {
+  const navigate=useNavigate();
   const { state, dispatch } = useGeneration();
   const { generate, isGenerating } = useGenerateScript();
   const [isExpanded, setIsExpanded] = useState(false);
@@ -35,18 +37,24 @@ const PromptInput: React.FC = () => {
     let userPrompt=state.prompt;
 
     try {
+      const token=localStorage.getItem('token');
       const res=await axios.post("http://localhost:3000/api/userPrompt", {
         userPrompt
+      },{
+        headers:{
+          Authorization:`Bearer ${token}`
+        }
       });
-      
-      // Then generate the script
+      state.scriptId=res.data.scriptId;
       if(res.status===200){
         generate();
       }
-      
-
-    } catch (error) {
-      console.error('Error in submission process:', error);
+    } catch (error: any) {
+      if (error.response?.status === 401) {
+        navigate('/login');
+      } else {
+        console.error('Error in sending user prompt:', error);
+      }
     }
   };
 

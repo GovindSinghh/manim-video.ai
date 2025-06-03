@@ -14,7 +14,7 @@ if(!JWT_SECRET){
 }
 interface signupData{
     email:string;
-    password:number;
+    password:string;
 }
 interface AuthRequest extends Request{
     user?:{
@@ -54,9 +54,9 @@ router.post("/signup",async (req:Request,res:Response):Promise<any>=>{
             token
         });
     }catch(error){
+        console.log(error);
         res.status(502).json({
             message:"Try again! Something seems to be down",
-            error: error instanceof Error ? error.message : 'Unknown error'
         });
         return;
     }
@@ -90,19 +90,17 @@ router.post("/login",async (req:AuthRequest,res:Response):Promise<any>=>{
         });
     
     }catch(error){
+        console.log("Login Failed: ", error);
         res.status(403).json({
             message:"Login failed",
-            error:`Error ${error}`
         });
         return;
     }
 });
 
 router.post("/userPrompt",authMiddleware,async (req:AuthRequest,res:Response):Promise<any> =>{
-    console.log("1 executed");
     const prompt:string=req.body.userPrompt;
     const userId = req.user?.userId;
-    console.log("2 executed");
     if(!prompt){
         return res.status(403).json({
             message:"User prompt is empty"
@@ -121,8 +119,7 @@ router.post("/userPrompt",authMiddleware,async (req:AuthRequest,res:Response):Pr
                 userId: userId
             }
         });
-        console.log("3 executed");
-        
+        console.log("Prompt Received from User");
         res.status(200).json({
             message: "Prompt received!",
             scriptId: createdScript.id
@@ -144,11 +141,21 @@ router.get("/generateScript",authMiddleware,async (req:AuthRequest,res:Response)
             },
             select:{
                 userPrompt:true,
+                script:true,
+                videoUrl:true
             }
         })
         if(!scriptData){
             res.status(403).json({
                 message:"Please send the prompt first"
+            });
+            return;
+        }
+        // if user clicks on the history item
+        if(scriptData.script!=="" && scriptData.videoUrl!==""){
+            res.status(200).json({
+                script:scriptData.script,
+                videoUrl:scriptData.videoUrl
             });
             return;
         }
@@ -158,40 +165,49 @@ router.get("/generateScript",authMiddleware,async (req:AuthRequest,res:Response)
         const script=receivedResponse.script;
         const sceneName=receivedResponse.sceneName;
 
+        try{
+            const response_from_Worker=await publishScript(scriptId,script,sceneName);
+            console.log("Worker response: ",response_from_Worker);
+            const cloudfront_video_url=`${process.env.CLOUDFRONT_DOMAIN}/output_${scriptId}.mp4`;
 
-    
-        const publishScriptRes_from_MQ=await publishScript(scriptId,script,sceneName);
-
-        // update the record and get the videoUrl
-        if(script){
-            const createdScriptRes=await prisma.script.update({
-                where:{
-                    id:scriptId
-                },
-                data:{
-                    script: script,
-                    videoUrl:"https://www.youtube.com" // this should be updated by worker to actual Url
-                },
-                select:{
-                    videoUrl:true,
-                    script:true
-                }
-            });
-    
-            res.status(200).json({
-                script: script,
-                videoUrl: createdScriptRes.videoUrl
-            });
-        } else {
-            res.status(500).json({
-                message: "Failed to generate script"
-            });
+            // update the record
+            if(script && response_from_Worker.isUploaded){
+                const createdScriptRes=await prisma.script.update({
+                    where:{
+                        id:scriptId
+                    },
+                    data:{
+                        script: script,
+                        videoUrl:cloudfront_video_url
+                    },
+                    select:{
+                        videoUrl:true,
+                        script:true
+                    }
+                });
+                console.log("[Final Success] VideoUrl Stored in DB");
+                res.status(200).json({
+                    script: createdScriptRes.script,
+                    videoUrl: createdScriptRes.videoUrl
+                });
+            } else {
+                await prisma.script.delete({
+                    where:{
+                        id:scriptId
+                    }
+                });
+                res.status(500).json({
+                    message: "Failed to generate script, Try again!"
+                });
+            }
+        }catch(error){
+            console.log("Something failed in publish function: ",error);
         }
     }
     catch(error){
         console.error('Error generating script:', error);
         res.status(500).json({
-            message:`Try again, something went wrong: ${error}`
+            message:`Try again, something went wrong`
         });
         return;
     }

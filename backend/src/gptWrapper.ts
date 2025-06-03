@@ -21,7 +21,6 @@ interface API_RESPONSE {
 export async function generateScript(userPrompt:string):Promise<API_RESPONSE> {
     
     try{
-        console.log("Script generation started here");
         const response = await client.path("/chat/completions").post({
             body: {
                 messages: [

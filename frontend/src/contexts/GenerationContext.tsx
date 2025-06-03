@@ -3,16 +3,18 @@ import { GenerationState, GenerationAction, HistoryItem } from '../types';
 import axios from 'axios';
 
 
+const generateScript = async (prompt: string,scriptId:number): Promise<{script:string,videoUrl:string}> => {
 
-const generateScript = async (prompt: string): Promise<{script:string,videoUrl:string}> => {
   try {
     console.log(`Generating script for prompt: ${prompt}`);
-    
-    const response = await axios.get("http://localhost:3000/api/generateScript");
-    
+    const token=localStorage.getItem('token');
+    const response = await axios.get(`http://localhost:3000/api/generateScript?scriptId=${scriptId}`,{
+      headers:{
+        Authorization:`Bearer ${token}`
+      }
+    });
     return response.data;
-  } catch (error) {
-    console.error('Error generating script:', error);
+  } catch (error:any) {
     throw new Error('Failed to generate script. Please try again.');
   }
 };
@@ -20,10 +22,12 @@ const generateScript = async (prompt: string): Promise<{script:string,videoUrl:s
 // Initial state
 const initialState: GenerationState = {
   prompt: '',
+  scriptId:null,
   status: 'idle',
   script: null,
   videoUrl: null,
-  error: null
+  error: null,
+  isHistory:false
 };
 
 // History initial state
@@ -67,11 +71,13 @@ const GenerationContext = createContext<GenerationContextProps | undefined>(unde
 export const GenerationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(generationReducer, initialState);
   const [history, setHistory] = React.useState<HistoryItem[]>(initialHistory);
-
   const addToHistory = (item: Omit<HistoryItem, 'id' | 'timestamp'>) => {
+    if(!state.scriptId){
+      return;
+    }
     const newItem: HistoryItem = {
       ...item,
-      id: Math.random().toString(36).substring(2, 9),
+      id: state.scriptId,
       timestamp: Date.now()
     };
     setHistory(prev => [newItem, ...prev]);
@@ -105,16 +111,23 @@ export const useGenerateScript = () => {
       return;
     }
 
+    if (!state.scriptId) {
+      dispatch({ type: 'GENERATION_ERROR', payload: 'No script ID found. Please try again.' });
+      return;
+    }
+
     dispatch({ type: 'START_GENERATION' });
 
     try {
-      const result = await generateScript(state.prompt);
+      const result = await generateScript(state.prompt, state.scriptId);
       dispatch({ type: 'GENERATION_SUCCESS', payload: result });
-      addToHistory({
-        prompt: state.prompt,
-        script: result.script,
-        videoUrl: result.videoUrl
-      });
+      if(!state.isHistory){ // if not in history, then add to history
+        addToHistory({
+          prompt: state.prompt,
+          script: result.script,
+          videoUrl: result.videoUrl
+        });
+      }
     } catch (error) {
       dispatch({
         type: 'GENERATION_ERROR',

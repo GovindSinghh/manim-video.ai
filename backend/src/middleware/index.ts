@@ -19,7 +19,7 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction):
         (req as any).user = decoded;
         next();
     } catch (err) {
-        res.status(400).json({ message: 'Invalid Token' });
+        res.status(401).json({ message: 'Invalid Token' });
     }
 }
 

@@ -7,13 +7,13 @@ const Footer: React.FC = () => {
       <div className="container mx-auto flex flex-col md:flex-row justify-between items-center">
         <div className="mb-4 md:mb-0 text-center md:text-left">
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            © {new Date().getFullYear()} Manim Script Generator. All rights reserved.
+            © {new Date().getFullYear()} MathVizAI. All rights reserved.
           </p>
         </div>
         
         <div className="flex items-center space-x-6">
-          <a 
-            href="#" 
+          <a
+            href="https://github.com/GovindSinghh/manim-video.ai"
             className="text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
           >
             <span className="flex items-center">

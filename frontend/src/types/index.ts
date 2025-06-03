@@ -1,9 +1,11 @@
 export interface GenerationState {
   prompt: string;
+  scriptId:number | null;
   status: 'idle' | 'generating' | 'success' | 'error';
   script: string | null;
   videoUrl: string | null;
   error: string | null;
+  isHistory:boolean;
 }
 
 export type GenerationAction =
@@ -14,7 +16,7 @@ export type GenerationAction =
   | { type: 'RESET' };
 
 export interface HistoryItem {
-  id: string;
+  id: number;
   prompt: string;
   script: string;
   videoUrl: string;

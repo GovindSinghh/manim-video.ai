@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { ChevronDown, ChevronUp, Clock, Trash2 } from 'lucide-react';
-import { useGeneration } from '../contexts/GenerationContext';
+import { useGenerateScript, useGeneration } from '../contexts/GenerationContext';
 
 const History: React.FC = () => {
   const { history, clearHistory } = useGeneration();
+  const { state, dispatch } = useGeneration();
+  const { generate } = useGenerateScript();
   const [isExpanded, setIsExpanded] = useState(false);
 
   if (history.length === 0) {
@@ -49,9 +51,15 @@ const History: React.FC = () => {
           </div>
           <div className="space-y-3 max-h-64 overflow-y-auto custom-scrollbar">
             {history.map((item) => (
-              <div 
-                key={item.id} 
-                className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors"
+              <div
+                key={item.id}
+                className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 hover:text-black-200 dark:hover:bg-gray-750 transition-colors cursor-pointer"
+                onClick={()=>{
+                  dispatch({ type:"SET_PROMPT",payload:item.prompt });
+                  state.scriptId=item.id;
+                  state.isHistory=true;
+                  generate();
+                }}
               >
                 <p className="font-medium text-gray-900 dark:text-white">{item.prompt}</p>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{formatDate(item.timestamp)}</p>
